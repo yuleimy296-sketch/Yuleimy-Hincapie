@@ -483,24 +483,21 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
   document.getElementById('previewSection').style.display = 'none';
   document.getElementById('resultsContainer').classList.remove('hidden');
 
-// URL NUEVA DE GOOGLE APPS SCRIPT
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbxNIlEdUYP7XRTxudhHXNw8_ye96L_sETBoDiBBeY8AAO8Vrmb3s8lMKkAmTv-d3NlN/exec'; 
 
-  // Enviar datos por POST con no-cors para evitar bloqueos del navegador
-  fetch(scriptURL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify(resultRecord)
-  })
-  .then(() => {
-    // Como usamos no-cors, la respuesta es opaca pero el dato SÍ llega a Google Sheets
-    scoreDetails.innerHTML = `
-      <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid #4CAF50; text-align: center;">
-        <h2 style="color: #4CAF50;">✅ ¡Evaluación Entregada con Éxito!</h2>
-        <p>Tus respuestas y tu tiempo han sido registrados de forma segura en el sistema del profesor.</p>
-        <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">Ya puedes cerrar esta pestaña.</p>
-      </div>
-    `;
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzaWbqOxg35ZZXduBvGkqchSYLOMAaX2xnQkp93rur-0Kw3Mp9rFtdJ392-LX9A835T/exec'; 
+
+  // Usamos sendBeacon para enviar los datos a Google sin bloqueos de red
+  const blob = new Blob([JSON.stringify(resultRecord)], { type: 'text/plain;charset=utf-8' });
+  navigator.sendBeacon(scriptURL, blob);
+
+  // Mostramos el mensaje de éxito de forma inmediata
+  scoreDetails.innerHTML = `
+    <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid #4CAF50; text-align: center;">
+      <h2 style="color: #4CAF50;">✅ ¡Evaluación Entregada con Éxito!</h2>
+      <p>Tus respuestas y tu tiempo han sido registrados de forma segura en el sistema del profesor.</p>
+      <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">Ya puedes cerrar esta pestaña.</p>
+    </div>
+  `;
   })
   .catch(error => {
     console.error('Error de red:', error);
