@@ -14,7 +14,7 @@ let secondsElapsed = 0;
 let timerInterval = null;
 
 // ==========================================
-// 1. ENRUTADOR Y CARGA INICIAL (MODIFICADO PARA LINKS UNIVERSALES)
+// 1. ENRUTADOR Y CARGA INICIAL
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
   // Cargar datos locales (solo para el profesor)
@@ -47,7 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     let targetExam = null;
 
-    // 1. Intentar cargar el examen directamente desde el enlace (celular del estudiante)
+    // 1. Intentar cargar el examen directamente desde el enlace del estudiante
     if (encodedExamData) {
       try {
         const decodedStr = decodeURIComponent(escape(atob(decodeURIComponent(encodedExamData))));
@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
         alert('El enlace del examen es inválido o está incompleto.');
       }
     } 
-    // 2. Si no hay link largo, intentar cargar localmente (PC del profesor)
+    // 2. Si no hay link largo, intentar cargar localmente
     else if (sharedExamId) {
       targetExam = examsBank.find(e => e.id === parseInt(sharedExamId));
     }
@@ -277,12 +277,11 @@ function renderExamsBank() {
     const card = document.createElement('div');
     card.style.cssText = 'background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 12px;';
 
-    // MODIFICADO: Generación del enlace empaquetando el examen completo en la URL
+    // Generación segura del enlace usando la URL actual limpia de GitHub Pages
     const examJson = JSON.stringify(exam);
     const encodedExam = encodeURIComponent(btoa(unescape(encodeURIComponent(examJson))));
     
-    // Creamos la URL base limpia y le pegamos los datos
-    const baseUrl = window.location.origin + window.location.pathname;
+    const baseUrl = window.location.href.split('?')[0];
     const studentShareUrl = `${baseUrl}?mode=student&examData=${encodedExam}`;
 
     const submissionCount = evaluationHistory.filter(h => h.examId === exam.id).length;
@@ -424,7 +423,7 @@ function renderPreviewQuestions(exam) {
 }
 
 // ==========================================
-// 5. EVALUACIÓN Y GUARDADO DE RESPUESTAS (MODIFICADO PARA GOOGLE SHEETS)
+// 5. EVALUACIÓN Y GUARDADO DE RESPUESTAS (DEFINITIVO)
 // ==========================================
 document.getElementById('previewExamForm')?.addEventListener('submit', function (e) {
   e.preventDefault();
@@ -441,7 +440,6 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
   let maxPossibleScore = 0;
   let correctCount = 0;
   let totalMultipleCount = 0;
-  let responsesLog = [];
 
   activeExamForPreview.questions.forEach((q) => {
     const points = q.points || 1;
@@ -472,25 +470,20 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
     intentosSalida: exitAttemptsCount
   };
 
-  // Mostrar pantalla de carga para evitar doble envío
-  const scoreDetails = document.getElementById('scoreDetails');
-  scoreDetails.innerHTML = `
-    <div style="text-align: center; padding: 20px;">
-      <h3>Enviando resultados de forma segura... ⏳</h3>
-      <p style="color: #666;">Por favor no cierres esta ventana.</p>
-    </div>
-  `;
-  document.getElementById('previewSection').style.display = 'none';
-  document.getElementById('resultsContainer').classList.remove('hidden');
-
-
+  // URL DE GOOGLE APPS SCRIPT
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzaWbqOxg35ZZXduBvGkqchSYLOMAaX2xnQkp93rur-0Kw3Mp9rFtdJ392-LX9A835T/exec'; 
 
-  // Usamos sendBeacon para enviar los datos a Google sin bloqueos de red
+  // Envío invisible en segundo plano con sendBeacon (cero bloqueos de red)
   const blob = new Blob([JSON.stringify(resultRecord)], { type: 'text/plain;charset=utf-8' });
   navigator.sendBeacon(scriptURL, blob);
 
-  // Mostramos el mensaje de éxito de forma inmediata
+  // Ocultar formulario y mostrar pantalla de éxito
+  document.getElementById('previewSection').style.display = 'none';
+  const resultsContainer = document.getElementById('resultsContainer');
+  resultsContainer.classList.remove('hidden');
+  resultsContainer.style.display = 'block';
+
+  const scoreDetails = document.getElementById('scoreDetails');
   scoreDetails.innerHTML = `
     <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid #4CAF50; text-align: center;">
       <h2 style="color: #4CAF50;">✅ ¡Evaluación Entregada con Éxito!</h2>
@@ -498,34 +491,13 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
       <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">Ya puedes cerrar esta pestaña.</p>
     </div>
   `;
-  })
-  .catch(error => {
-    console.error('Error de red:', error);
-  });
-  .catch(error => {
-    console.error('Error:', error);
-    scoreDetails.innerHTML = `
-      <div style="background: #ffebee; padding: 20px; border-radius: 8px; border: 1px solid #f44336; text-align: center;">
-        <h2 style="color: #f44336;">❌ Error de conexión</h2>
-        <p>Hubo un problema al enviar tu examen a la base de datos del profesor.</p>
-        <p style="margin-top:10px;">Por favor, toma una captura de pantalla de esta información y envíala a tu profesor:</p>
-        <div style="background: #fff; padding: 10px; margin-top: 10px; border: 1px solid #ddd; text-align: left;">
-            <p><strong>Estudiante:</strong> ${studentName}</p>
-            <p><strong>Nota Local Estimada:</strong> ${finalGrade} / 5.0</p>
-            <p><strong>Tiempo:</strong> ${timeTakenStr}</p>
-        </div>
-      </div>
-    `;
-  });
   
   activeExamForPreview = null;
 });
 
 // ==========================================
-// 6. EXPORTACIÓN LOCAL A EXCEL (MODIFICADO POR EVALUACIÓN)
+// 6. EXPORTACIÓN LOCAL A EXCEL
 // ==========================================
-// NOTA: Esta función ahora sirve solo como respaldo para pruebas hechas en la PC del profe.
-// Las notas de los estudiantes llegarán directo a tu Google Sheets.
 function exportToExcel() {
   if (evaluationHistory.length === 0) {
     alert('No hay respuestas locales registradas para exportar.');
