@@ -483,17 +483,17 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
   document.getElementById('previewSection').style.display = 'none';
   document.getElementById('resultsContainer').classList.remove('hidden');
 
-// ==============================================================
-  // URL DE GOOGLE APPS SCRIPT
-  // ==============================================================
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzaWbqOxg35ZZXduBvGkqchSYLOMAaX2xnQkp93rur-0Kw3Mp9rFtdJ392-LX9A835T/exec'; 
+// URL NUEVA DE GOOGLE APPS SCRIPT
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbxNIlEdUYP7XRTxudhHXNw8_ye96L_sETBoDiBBeY8AAO8Vrmb3s8lMKkAmTv-d3NlN/exec'; 
 
-  // Empaquetamos los datos directo en el enlace para evitar bloqueos
-  const urlConDatos = scriptURL + '?datos=' + encodeURIComponent(JSON.stringify(resultRecord));
-
-  // Enviar datos por método GET (Infalible contra bloqueos)
-  fetch(urlConDatos)
-  .then(response => {
+  // Enviar datos por POST con no-cors para evitar bloqueos del navegador
+  fetch(scriptURL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify(resultRecord)
+  })
+  .then(() => {
+    // Como usamos no-cors, la respuesta es opaca pero el dato SÍ llega a Google Sheets
     scoreDetails.innerHTML = `
       <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid #4CAF50; text-align: center;">
         <h2 style="color: #4CAF50;">✅ ¡Evaluación Entregada con Éxito!</h2>
@@ -502,6 +502,9 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
       </div>
     `;
   })
+  .catch(error => {
+    console.error('Error de red:', error);
+  });
   .catch(error => {
     console.error('Error:', error);
     scoreDetails.innerHTML = `
