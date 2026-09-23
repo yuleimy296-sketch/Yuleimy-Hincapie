@@ -484,14 +484,13 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
   document.getElementById('resultsContainer').classList.remove('hidden');
 
   // ==============================================================
-  // ⚠️ ATENCIÓN: PEGA AQUÍ LA URL QUE TE DIO GOOGLE APPS SCRIPT
+  // URL DE GOOGLE APPS SCRIPT
   // ==============================================================
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzaWbqOxg35ZZXduBvGkqchSYLOMAaX2xnQkp93rur-0Kw3Mp9rFtdJ392-LX9A835T/exec'; 
 
-  // Enviar datos de forma invisible a Google Sheets
+  // Enviar datos de forma invisible a Google Sheets (Sin la línea problemática)
   fetch(scriptURL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(resultRecord)
   })
   .then(response => {
