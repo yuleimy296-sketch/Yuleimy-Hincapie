@@ -483,17 +483,16 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
   document.getElementById('previewSection').style.display = 'none';
   document.getElementById('resultsContainer').classList.remove('hidden');
 
-  // ==============================================================
+// ==============================================================
   // URL DE GOOGLE APPS SCRIPT
   // ==============================================================
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzaWbqOxg35ZZXduBvGkqchSYLOMAaX2xnQkp93rur-0Kw3Mp9rFtdJ392-LX9A835T/exec'; 
 
-  // Enviar datos de forma invisible a Google Sheets (Sin la línea problemática)
-  fetch(scriptURL, {
-    method: 'POST',
-    mode:'no-cors',
-    body: JSON.stringify(resultRecord)
-  })
+  // Empaquetamos los datos directo en el enlace para evitar bloqueos
+  const urlConDatos = scriptURL + '?datos=' + encodeURIComponent(JSON.stringify(resultRecord));
+
+  // Enviar datos por método GET (Infalible contra bloqueos)
+  fetch(urlConDatos)
   .then(response => {
     scoreDetails.innerHTML = `
       <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid #4CAF50; text-align: center;">
