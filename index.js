@@ -491,6 +491,7 @@ document.getElementById('previewExamForm')?.addEventListener('submit', function 
   // Enviar datos de forma invisible a Google Sheets (Sin la línea problemática)
   fetch(scriptURL, {
     method: 'POST',
+    mode:'no-cors',
     body: JSON.stringify(resultRecord)
   })
   .then(response => {
